@@ -1,6 +1,7 @@
 const router = require("express").Router();
 
 const Projects = require("./project-model");
+const Actions = require("./action-model");
 
 // TODO: MVP goals:
 /*
@@ -31,10 +32,15 @@ const Projects = require("./project-model");
 //endpoints here
 
 router.get("/", (req, res) => {
+  //const list = Actions;
   Projects.find()
     .then(projects => {
-      res.status(200).json(projects);
+      res.status(200).json(
+        projects
+        // list
+      );
     })
+
     .catch(error => {
       res
         .status(500)
