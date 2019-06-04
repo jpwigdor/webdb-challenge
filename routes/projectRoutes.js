@@ -1,7 +1,10 @@
 const router = require("express").Router();
+const knex = require("knex");
+const knexConfig = require("../knexfile.js");
 
 const Projects = require("./project-model");
 const Actions = require("./action-model");
+const db = knex(knexConfig.development);
 
 // TODO: MVP goals:
 /*
@@ -50,14 +53,22 @@ router.get("/", (req, res) => {
 
 router.get("/:id", (req, res) => {
   const { id } = req.params;
-  Projects.findById(id)
-    .then(project => {
-      res.status(200).json(project);
+  db("projects")
+    .where({ id: id })
+    .first()
+    .then(projects => {
+      db("actions")
+        .where({ project_id: id })
+        .then(actions => {
+          projects.actions = actions;
+          return res.status(200).json(projects);
+        });
     })
-    .catch(error => {
-      if (error === 404)
-        res.status(404).json({ error: "No project with that ID found." });
-      else res.status(500).json({ error });
+    .catch(err => {
+      res.status(500).json({
+        error: err,
+        message: "The project information could not be retrieved."
+      });
     });
 });
 
@@ -78,6 +89,18 @@ router.post("/", (req, res) => {
   } else {
     res.status(400).json({ message: "please provide name of the project" });
   }
+});
+
+router.put("/:id", (req, res) => {
+  db("projects")
+    .where({ id: req.params.id })
+    .update(req.body)
+    .then(project => {
+      res.status(200).json(project);
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
 });
 
 module.exports = router;
